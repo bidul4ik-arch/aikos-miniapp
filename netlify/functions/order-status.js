@@ -1,5 +1,4 @@
 const { checkTelegramAuth } = require("./_utils");
-
 exports.handler = async (event) => {
   try {
     const initData = event.headers["telegram-init-data"] || "";

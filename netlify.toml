@@ -2,8 +2,8 @@
   publish = "public"
 
 [functions]
-  node_bundler = "esbuild"
-  included_files = ["menu.json","branches.json","reviews.json"]
+  # Классический бандлер надёжнее для простых функций
+  node_bundler = "zisi"
 
 [[redirects]]
   from = "/api/*"
