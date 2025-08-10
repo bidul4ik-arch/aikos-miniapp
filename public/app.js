@@ -27,7 +27,9 @@ const fAspect = document.querySelector("#f-aspect");
 const fRim = document.querySelector("#f-rim");
 const fStud = document.querySelector("#f-stud");
 const fRunflat = document.querySelector("#f-runflat");
-const grid = document.querySelector("#grid");
+const grid =
+  document.querySelector("#grid, .grid, #items, #catalog, #cards, [data-grid], [data-role='grid']") ||
+  (() => { const el = document.createElement("div"); el.className = "grid"; (document.querySelector(".wrap")||document.body).appendChild(el); return el; })();
 const itemsCount = document.querySelector("#items-count");
 const hello = document.querySelector("#hello");
 const logo = document.querySelector(".logo");
