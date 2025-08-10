@@ -27,9 +27,7 @@ const fAspect = document.querySelector("#f-aspect");
 const fRim = document.querySelector("#f-rim");
 const fStud = document.querySelector("#f-stud");
 const fRunflat = document.querySelector("#f-runflat");
-const grid =
-  document.querySelector("#grid, .grid, #items, #catalog, #cards, [data-grid], [data-role='grid']") ||
-  (() => { const el = document.createElement("div"); el.className = "grid"; (document.querySelector(".wrap")||document.body).appendChild(el); return el; })();
+const grid = document.querySelector("#grid");
 const itemsCount = document.querySelector("#items-count");
 const hello = document.querySelector("#hello");
 const logo = document.querySelector(".logo");
@@ -134,6 +132,39 @@ function updateCartBar(){
     else tg.MainButton.hide();
   }
 }
+const tabsEl = document.getElementById("tabs");
+const SECTIONS = [
+  { id: "catalog",  title: "Каталог"  },
+  { id: "fitment",  title: "По авто"  },
+  { id: "delivery", title: "Доставка" },
+  { id: "branches", title: "Филиалы" },
+  { id: "reviews",  title: "Отзывы"   },
+];
+
+function showTab(id) {
+  document.querySelectorAll("section").forEach(s => {
+    s.style.display = (s.id === id) ? "block" : "none";
+  });
+  if (tabsEl) {
+    tabsEl.querySelectorAll(".tab").forEach(t =>
+      t.classList.toggle("active", t.dataset.id === id)
+    );
+  }
+}
+
+function buildTabs() {
+  if (!tabsEl) return;
+  tabsEl.innerHTML = SECTIONS
+    .map(t => `<div class="tab" data-id="${t.id}">${t.title}</div>`)
+    .join("");
+  tabsEl.querySelectorAll(".tab").forEach(btn =>
+    btn.addEventListener("click", () => showTab(btn.dataset.id))
+  );
+  showTab("catalog"); // <-- показываем каталог сразу
+}
+
+// вызвать до/после загрузки меню — без разницы
+buildTabs();
 
 async function bootstrap(){
   try {
