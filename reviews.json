@@ -1,0 +1,32 @@
+[
+  {
+    "id": "google",
+    "label": "Google Maps",
+    "url": "https://maps.app.goo.gl/your-company"
+  },
+  {
+    "id": "yandex",
+    "label": "Яндекс Карты",
+    "url": "https://yandex.kz/maps/org/your-company"
+  },
+  {
+    "id": "2gis",
+    "label": "2ГИС",
+    "url": "https://2gis.kz/your-company"
+  },
+  {
+    "id": "trustpilot",
+    "label": "Trustpilot",
+    "url": "https://www.trustpilot.com/review/your-company.com"
+  },
+  {
+    "id": "facebook",
+    "label": "Facebook",
+    "url": "https://facebook.com/your-company"
+  },
+  {
+    "id": "instagram",
+    "label": "Instagram",
+    "url": "https://instagram.com/your-company"
+  }
+]

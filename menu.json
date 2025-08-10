@@ -1,0 +1,315 @@
+{
+  "categories": [
+    {
+      "id": "summer",
+      "name": "Летние",
+      "sort": 1
+    },
+    {
+      "id": "winter",
+      "name": "Зимние",
+      "sort": 2
+    },
+    {
+      "id": "allseason",
+      "name": "Всесезон",
+      "sort": 3
+    }
+  ],
+  "brands": [
+    "Michelin",
+    "Bridgestone",
+    "Nokian",
+    "Continental",
+    "Yokohama",
+    "Pirelli",
+    "Toyo",
+    "Hankook",
+    "Goodyear",
+    "Kumho"
+  ],
+  "items": [
+    {
+      "id": "bridgestone_turanza_195_65_r15",
+      "brand": "Bridgestone",
+      "title": "Turanza T005",
+      "size": {
+        "width": 195,
+        "aspect": 65,
+        "rim": 15
+      },
+      "season": "summer",
+      "studded": false,
+      "runflat": false,
+      "loadIndex": 91,
+      "speedIndex": "H",
+      "price": 79.0,
+      "currency": "EUR",
+      "stock": [
+        {
+          "branchId": "almaty_centre",
+          "qty": 12
+        },
+        {
+          "branchId": "astana_south",
+          "qty": 8
+        }
+      ],
+      "images": [
+        "/images/tire_michelin_ps4.webp",
+        "/images/tire_kumho.webp"
+      ]
+    },
+    {
+      "id": "kumho_ecsta_195_60_r15",
+      "brand": "Kumho",
+      "title": "Ecsta HS51",
+      "size": {
+        "width": 195,
+        "aspect": 60,
+        "rim": 15
+      },
+      "season": "summer",
+      "studded": false,
+      "runflat": false,
+      "loadIndex": 88,
+      "speedIndex": "H",
+      "price": 59.0,
+      "currency": "EUR",
+      "stock": [
+        {
+          "branchId": "almaty_centre",
+          "qty": 10
+        }
+      ],
+      "images": [
+        "/images/tire_kumho.webp",
+        "/images/tire_dunlop.webp"
+      ]
+    },
+    {
+      "id": "michelin_energy_205_55_r16",
+      "brand": "Michelin",
+      "title": "Energy Saver+",
+      "size": {
+        "width": 205,
+        "aspect": 55,
+        "rim": 16
+      },
+      "season": "summer",
+      "studded": false,
+      "runflat": false,
+      "loadIndex": 91,
+      "speedIndex": "V",
+      "price": 109.0,
+      "currency": "EUR",
+      "stock": [
+        {
+          "branchId": "almaty_centre",
+          "qty": 14
+        },
+        {
+          "branchId": "shymkent_north",
+          "qty": 5
+        }
+      ],
+      "images": [
+        "/images/tire_michelin_ps4.webp",
+        "/images/tire_goodyear.webp"
+      ]
+    },
+    {
+      "id": "continental_pc6_205_60_r16",
+      "brand": "Continental",
+      "title": "PremiumContact 6",
+      "size": {
+        "width": 205,
+        "aspect": 60,
+        "rim": 16
+      },
+      "season": "summer",
+      "studded": false,
+      "runflat": false,
+      "loadIndex": 92,
+      "speedIndex": "V",
+      "price": 119.0,
+      "currency": "EUR",
+      "stock": [
+        {
+          "branchId": "astana_south",
+          "qty": 7
+        }
+      ],
+      "images": [
+        "/images/tire_nokian_green3.jpg",
+        "/images/tire_nokian_nordman7.jpg"
+      ]
+    },
+    {
+      "id": "yokohama_iceguard_225_45_r17",
+      "brand": "Yokohama",
+      "title": "iceGUARD iG53",
+      "size": {
+        "width": 225,
+        "aspect": 45,
+        "rim": 17
+      },
+      "season": "winter",
+      "studded": false,
+      "runflat": false,
+      "loadIndex": 94,
+      "speedIndex": "H",
+      "price": 139.0,
+      "currency": "EUR",
+      "stock": [
+        {
+          "branchId": "almaty_centre",
+          "qty": 6
+        },
+        {
+          "branchId": "astana_south",
+          "qty": 4
+        }
+      ],
+      "images": [
+        "/images/tire_sailun.webp",
+        "/images/tire_michelin_ps4.webp"
+      ]
+    },
+    {
+      "id": "nokian_hakka_225_50_r17",
+      "brand": "Nokian",
+      "title": "Hakkapeliitta R5",
+      "size": {
+        "width": 225,
+        "aspect": 50,
+        "rim": 17
+      },
+      "season": "winter",
+      "studded": false,
+      "runflat": false,
+      "loadIndex": 98,
+      "speedIndex": "H",
+      "price": 159.0,
+      "currency": "EUR",
+      "stock": [
+        {
+          "branchId": "shymkent_north",
+          "qty": 5
+        }
+      ],
+      "images": [
+        "/images/tire_nokian_green3.jpg",
+        "/images/tire_kumho.webp"
+      ]
+    },
+    {
+      "id": "pirelli_scorpion_235_55_r18",
+      "brand": "Pirelli",
+      "title": "Scorpion Verde",
+      "size": {
+        "width": 235,
+        "aspect": 55,
+        "rim": 18
+      },
+      "season": "allseason",
+      "studded": false,
+      "runflat": false,
+      "loadIndex": 104,
+      "speedIndex": "V",
+      "price": 189.0,
+      "currency": "EUR",
+      "stock": [
+        {
+          "branchId": "almaty_centre",
+          "qty": 4
+        }
+      ],
+      "images": [
+        "/images/tire_dunlop.webp",
+        "/images/tire_goodyear.webp"
+      ]
+    },
+    {
+      "id": "toyo_proxes_245_45_r18",
+      "brand": "Toyo",
+      "title": "Proxes Sport",
+      "size": {
+        "width": 245,
+        "aspect": 45,
+        "rim": 18
+      },
+      "season": "summer",
+      "studded": false,
+      "runflat": false,
+      "loadIndex": 100,
+      "speedIndex": "Y",
+      "price": 179.0,
+      "currency": "EUR",
+      "stock": [
+        {
+          "branchId": "astana_south",
+          "qty": 3
+        }
+      ],
+      "images": [
+        "/images/tire_nokian_green3.jpg",
+        "/images/tire_nokian_nordman7.jpg"
+      ]
+    },
+    {
+      "id": "hankook_ventus_255_45_r19",
+      "brand": "Hankook",
+      "title": "Ventus S1 evo3",
+      "size": {
+        "width": 255,
+        "aspect": 45,
+        "rim": 19
+      },
+      "season": "summer",
+      "studded": false,
+      "runflat": true,
+      "loadIndex": 104,
+      "speedIndex": "Y",
+      "price": 219.0,
+      "currency": "EUR",
+      "stock": [
+        {
+          "branchId": "almaty_centre",
+          "qty": 2
+        }
+      ],
+      "images": [
+        "/images/tire_sailun.webp",
+        "/images/tire_michelin_ps4.webp"
+      ]
+    },
+    {
+      "id": "goodyear_eagle_255_40_r19",
+      "brand": "Goodyear",
+      "title": "Eagle F1 Asymmetric",
+      "size": {
+        "width": 255,
+        "aspect": 40,
+        "rim": 19
+      },
+      "season": "summer",
+      "studded": false,
+      "runflat": false,
+      "loadIndex": 100,
+      "speedIndex": "Y",
+      "price": 229.0,
+      "currency": "EUR",
+      "stock": [
+        {
+          "branchId": "astana_south",
+          "qty": 3
+        }
+      ],
+      "images": [
+        "/images/tire_goodyear.webp",
+        "/images/tire_kumho.webp"
+      ]
+    }
+  ]
+}

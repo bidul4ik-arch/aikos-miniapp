@@ -1,0 +1,26 @@
+[build]
+  publish = "public"
+
+[functions]
+  node_bundler = "esbuild"
+  included_files = ["menu.json","branches.json","reviews.json"]
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/webhook"
+  to = "/.netlify/functions/webhook"
+  status = 200
+
+[[headers]]
+  for = "/app.js"
+  [headers.values]
+    Cache-Control = "no-store"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-store"

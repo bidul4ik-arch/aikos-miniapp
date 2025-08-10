@@ -1,0 +1,26 @@
+[
+  {
+    "id": "almaty_centre",
+    "name": "Алматы • Центр",
+    "address": "ул. Абая, 45",
+    "phone": "+7 727 123 45 67",
+    "hours": "09:00–20:00",
+    "mapUrl": "https://maps.app.goo.gl/"
+  },
+  {
+    "id": "astana_south",
+    "name": "Астана • Юг",
+    "address": "пр. Туран, 12",
+    "phone": "+7 7172 456 78 90",
+    "hours": "09:00–20:00",
+    "mapUrl": "https://maps.app.goo.gl/"
+  },
+  {
+    "id": "shymkent_north",
+    "name": "Шымкент • Север",
+    "address": "ул. Байтурсынова, 88",
+    "phone": "+7 7252 987 65 43",
+    "hours": "09:00–19:00",
+    "mapUrl": "https://maps.app.goo.gl/"
+  }
+]
