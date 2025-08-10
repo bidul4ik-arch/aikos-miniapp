@@ -1,6 +1,213 @@
 {
-  "ok": true,
-  "categories": [],
-  "brands": [],
-  "items": []
+  "categories": [
+    {
+      "id": "summer",
+      "label": "Летние"
+    },
+    {
+      "id": "winter",
+      "label": "Зимние"
+    },
+    {
+      "id": "allseason",
+      "label": "Всесезон"
+    }
+  ],
+  "brands": [
+    "Bridgestone",
+    "Michelin",
+    "Goodyear",
+    "Nokian",
+    "Sailun",
+    "Kumho",
+    "Dunlop"
+  ],
+  "items": [
+    {
+      "id": "michelin_ps4_225_45_r17",
+      "brand": "Michelin",
+      "title": "Pilot Sport 4",
+      "season": "summer",
+      "size": {
+        "width": 225,
+        "aspect": 45,
+        "rim": 17
+      },
+      "loadIndex": 94,
+      "speedIndex": "Y",
+      "price": 189.9,
+      "images": [
+        "/images/tire_michelin_ps4.webp"
+      ],
+      "stock": [
+        {
+          "qty": 12
+        },
+        {
+          "qty": 8
+        }
+      ]
+    },
+    {
+      "id": "goodyear_eaglef1_245_40_r18",
+      "brand": "Goodyear",
+      "title": "Eagle F1 Asymmetric 6",
+      "season": "summer",
+      "size": {
+        "width": 245,
+        "aspect": 40,
+        "rim": 18
+      },
+      "loadIndex": 97,
+      "speedIndex": "Y",
+      "price": 210.0,
+      "images": [
+        "/images/tire_goodyear.webp"
+      ],
+      "stock": [
+        {
+          "qty": 6
+        },
+        {
+          "qty": 5
+        }
+      ]
+    },
+    {
+      "id": "nokian_hakka_green3_195_65_r15",
+      "brand": "Nokian",
+      "title": "Hakka Green 3",
+      "season": "summer",
+      "size": {
+        "width": 195,
+        "aspect": 65,
+        "rim": 15
+      },
+      "loadIndex": 91,
+      "speedIndex": "H",
+      "price": 95.5,
+      "images": [
+        "/images/tire_nokian_green3.jpg"
+      ],
+      "stock": [
+        {
+          "qty": 20
+        }
+      ]
+    },
+    {
+      "id": "nokian_nordman7_205_55_r16",
+      "brand": "Nokian",
+      "title": "Nordman 7 (шипы)",
+      "season": "winter",
+      "studded": true,
+      "size": {
+        "width": 205,
+        "aspect": 55,
+        "rim": 16
+      },
+      "loadIndex": 94,
+      "speedIndex": "T",
+      "price": 110.0,
+      "images": [
+        "/images/tire_nokian_nordman7.jpg"
+      ],
+      "stock": [
+        {
+          "qty": 14
+        },
+        {
+          "qty": 7
+        }
+      ]
+    },
+    {
+      "id": "sailun_atrezzo_185_65_r15",
+      "brand": "Sailun",
+      "title": "Atrezzo Elite",
+      "season": "summer",
+      "size": {
+        "width": 185,
+        "aspect": 65,
+        "rim": 15
+      },
+      "loadIndex": 88,
+      "speedIndex": "H",
+      "price": 58.4,
+      "images": [
+        "/images/tire_sailun.webp"
+      ],
+      "stock": [
+        {
+          "qty": 35
+        }
+      ]
+    },
+    {
+      "id": "kumho_ecsta_215_55_r17",
+      "brand": "Kumho",
+      "title": "Ecsta PS71",
+      "season": "summer",
+      "size": {
+        "width": 215,
+        "aspect": 55,
+        "rim": 17
+      },
+      "loadIndex": 98,
+      "speedIndex": "W",
+      "price": 129.0,
+      "images": [
+        "/images/tire_kumho.webp"
+      ],
+      "stock": [
+        {
+          "qty": 11
+        }
+      ]
+    },
+    {
+      "id": "dunlop_sp_195_60_r15",
+      "brand": "Dunlop",
+      "title": "SP Sport FastResponse",
+      "season": "summer",
+      "size": {
+        "width": 195,
+        "aspect": 60,
+        "rim": 15
+      },
+      "loadIndex": 88,
+      "speedIndex": "H",
+      "price": 92.0,
+      "images": [
+        "/images/tire_dunlop.webp"
+      ],
+      "stock": [
+        {
+          "qty": 9
+        }
+      ]
+    },
+    {
+      "id": "bridgestone_turanza_t005_205_55_r16",
+      "brand": "Bridgestone",
+      "title": "Turanza T005",
+      "season": "summer",
+      "size": {
+        "width": 205,
+        "aspect": 55,
+        "rim": 16
+      },
+      "loadIndex": 91,
+      "speedIndex": "V",
+      "price": 118.0,
+      "images": [
+        "/images/noimage.svg"
+      ],
+      "stock": [
+        {
+          "qty": 16
+        }
+      ]
+    }
+  ]
 }
