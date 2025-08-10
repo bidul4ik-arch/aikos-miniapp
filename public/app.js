@@ -31,11 +31,34 @@ const grid = document.querySelector("#grid");
 const itemsCount = document.querySelector("#items-count");
 const hello = document.querySelector("#hello");
 const logo = document.querySelector(".logo");
+const currencyEl = document.querySelector('#currency');
+const vatEl      = document.querySelector('#vat');
+const btnCheckout = document.getElementById('btn-checkout');
 
 if (hello) hello.textContent = tg.initDataUnsafe?.user ? `Привет, ${tg.initDataUnsafe.user.first_name}!` : "Привет!";
 if (logo) logo.addEventListener('dblclick', ()=>showDebug(window.__last_menu_response || {}));
 
 const state = { menu:{categories:[], brands:[], items:[]}, cart:{} };
+const rates   = { EUR: 1, KZT: 500, USD: 1.1, UZS: 12900 }; // базовая валюта — EUR
+const symbols = { EUR: '€', KZT: '₸', USD: '$', UZS: 'сўм' };
+state.currency = 'EUR';
+state.vatMode  = 'with';
+
+function convert(amountEUR){ return amountEUR * (rates[state.currency] || 1); }
+function fmtPrice(amountEUR){
+  const v = convert(amountEUR);
+  const s = symbols[state.currency] || '';
+  const num = state.currency === 'UZS' ? Math.round(v).toLocaleString('ru-RU') : v.toFixed(2);
+  return `${s} ${num}`;
+}
+
+currencyEl?.addEventListener('change', ()=>{
+  state.currency = currencyEl.value;
+  renderCatalog(state.menu.items); // перерисовать цены
+});
+vatEl?.addEventListener('change', ()=>{
+  state.vatMode = vatEl.value;
+});
 
 async function api(path, opts={}){
   const headers = { "Content-Type":"application/json", ...(opts.headers||{}) };
@@ -93,7 +116,7 @@ function renderCatalog(items){
         <div class="row"><strong>${it.brand||''}</strong> <span class="badge">${labelSeason(it.season)}</span> ${it.runflat?'<span class="badge">RunFlat</span>':""} ${it.studded?'<span class="badge">Шипы</span>':""} <span class="badge">В наличии: ${stockSum(it)}</span></div>
         <div>${it.title||''}</div>
         <div class="hint">${it.size?`${it.size.width}/${it.size.aspect} R${it.size.rim}`:''}</div>
-        <div class="row"><div><strong>${Number(it.price||0).toFixed(2)} €</strong></div><button class="btn">В корзину</button></div>
+        <div class="row"><div><strong>${fmtPrice(Number(it.price||0))}</strong></div><button class="btn">В корзину</button></div>
       </div>`;
     const btn = div.querySelector(".btn");
     if (btn) btn.onclick = ()=>addToCart(it);
@@ -101,6 +124,7 @@ function renderCatalog(items){
   });
   updateCartBar();
 }
+
 
 function applyFilters(){
   const m = state.menu;
@@ -132,6 +156,50 @@ function updateCartBar(){
     else tg.MainButton.hide();
   }
 }
+async function checkout(){
+  const items = Object.entries(state.cart).map(([id, c])=>{
+    const it = (state.menu.items||[]).find(x=>x.id===id) || {};
+    return { id, qty: Number(c.qty||0), price: Number(it.price||0) }; // price в EUR (база)
+  });
+  if (!items.length) return tg.showAlert('Корзина пустая');
+
+  const { status, json } = await api('/api/orders', {
+    method: 'POST',
+    body: JSON.stringify({ items, vatMode: state.vatMode })
+  });
+  if (status !== 200 || !json.ok) throw new Error(json.error || 'order failed');
+
+  const { orderId, total } = json;
+  tg.showAlert(`Заказ оформлен!\n№ ${orderId}\nСумма: ${fmtPrice(total)} (${state.vatMode==='with' ? 'с НДС' : 'без НДС'})`);
+
+  state.cart = {};
+  updateCartBar();
+
+  const input = document.getElementById('order-id');
+  if (input) input.value = orderId;
+  showTab('delivery');
+  await trackOrder(orderId);
+}
+btnCheckout?.addEventListener('click', checkout);
+if (tg.MainButton?.onClick) tg.MainButton.onClick(checkout);
+
+async function trackOrder(id){
+  const { status, json } = await api(`/api/order-status?id=${encodeURIComponent(id)}`);
+  if (status === 200 && json.ok){
+    const box = document.getElementById('track-result');
+    if (box){
+      box.style.display = 'block';
+      box.innerHTML = `<div><b>Заказ ${json.orderId}</b></div>
+                       <div>Статус: ${json.status}</div>
+                       <div>ETA: ${json.eta||'-'}</div>`;
+    }
+  }
+}
+document.getElementById('btn-track')?.addEventListener('click', ()=>{
+  const id = document.getElementById('order-id')?.value.trim();
+  if (!id) return tg.showAlert('Введите номер заказа');
+  trackOrder(id);
+});
 const tabsEl = document.getElementById("tabs");
 const SECTIONS = [
   { id: "catalog",  title: "Каталог"  },
@@ -140,6 +208,40 @@ const SECTIONS = [
   { id: "branches", title: "Филиалы" },
   { id: "reviews",  title: "Отзывы"   },
 ];
+let branchesLoaded = false, reviewsLoaded = false;
+
+async function loadBranchesOnce(){
+  if (branchesLoaded) return;
+  const { status, json } = await api('/api/branches');
+  if (status === 200 && json.ok){
+    const list = document.getElementById('branches-list');
+    if (list) {
+      list.innerHTML = (json.branches||[]).map(b=>`
+        <div class="item">
+          <div><b>${b.name}</b></div>
+          <div class="muted">${b.address}</div>
+          <div class="muted">${b.hours||''}</div>
+          <div class="row">
+            <a href="${b.mapUrl}" target="_blank">На карте</a>
+            <a href="tel:${b.phone}">${b.phone}</a>
+          </div>
+        </div>`).join('');
+    }
+    branchesLoaded = true;
+  }
+}
+
+async function loadReviewsOnce(){
+  if (reviewsLoaded) return;
+  const { status, json } = await api('/api/reviews');
+  if (status === 200 && json.ok){
+    const list = document.getElementById('reviews-list');
+    if (list) {
+      list.innerHTML = (json.links||[]).map(r=>`<a class="item" href="${r.url}" target="_blank">${r.label}</a>`).join('');
+    }
+    reviewsLoaded = true;
+  }
+}
 
 function showTab(id) {
   document.querySelectorAll("section").forEach(s => {
@@ -150,6 +252,8 @@ function showTab(id) {
       t.classList.toggle("active", t.dataset.id === id)
     );
   }
+  if (id === 'branches') loadBranchesOnce();
+  if (id === 'reviews')  loadReviewsOnce();
 }
 
 function buildTabs() {
