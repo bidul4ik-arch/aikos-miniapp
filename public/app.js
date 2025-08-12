@@ -62,6 +62,7 @@ function fmtPrice(amountEUR){
 currencyEl?.addEventListener('change', ()=>{
   state.currency = currencyEl.value;
   renderCatalog(state.menu.items); // перерисовать цены
+  if (isCartOpen) renderCartModal();
 });
 vatEl?.addEventListener('change', ()=>{
   state.vatMode = vatEl.value;
@@ -182,90 +183,80 @@ function updateCartBar(){
   if (tg.MainButton && tg.MainButton.setText) {
     if (c>0) tg.MainButton.setText(`Оформить • ${c}`).show();
     else tg.MainButton.hide();
-  }
-  function getCartItems(){
-    const items = state.menu.items || [];
-    return Object.entries(state.cart).map(([id, c])=>{
-      const it = items.find(x=>x.id===id) || {};
-      return { id, qty: Number(c.qty||0), price: Number(it.price||0), it };
-    }).filter(x=>x.qty>0);
-  }
-  
-  function setQty(id, qty){
-    if (qty <= 0) delete state.cart[id];
-    else {
-      if(!state.cart[id]) state.cart[id] = { qty:0, price:0 };
-      state.cart[id].qty = qty;
     }
-    updateCartBar();
-    if (isCartOpen) renderCartModal();
-  }
-  
-  function lineTotalEUR(row){ return row.qty * (row.price || 0); }
-  function cartTotalsEUR(){
-    const rows = getCartItems();
-    const subtotal = rows.reduce((s,r)=> s + lineTotalEUR(r), 0);
-    const vat = state.vatMode === 'with' ? subtotal * VAT_RATE : 0;
-    const total = state.vatMode === 'with' ? (subtotal + vat) : subtotal;
-    return { subtotal, vat, total };
-  }
-  
-  function renderCartModal(){
-    const rows = getCartItems();
-  
-    // Список позиций
-    if (rows.length === 0){
-      cartList.innerHTML = `<div class="item">Корзина пуста. Добавьте товары из каталога.</div>`;
-    } else {
-      cartList.innerHTML = rows.map(r=>{
-        const it = r.it || {};
-        const sz = it.size ? `${it.size.width}/${it.size.aspect} R${it.size.rim}` : '';
-        return `
-        <div class="item" data-id="${r.id}">
-          <div><b>${it.brand || ''} ${it.title || ''}</b></div>
-          <div class="muted">${sz}</div>
-          <div class="row">
-            <div class="muted">Цена: ${fmtPrice(it.price||0)} • Сумма: <b>${fmtPrice(lineTotalEUR(r))}</b></div>
-            <div class="row" style="gap:6px">
-              <button class="close btn-dec">–</button>
-              <span>${r.qty}</span>
-              <button class="close btn-inc">+</button>
-              <button class="close btn-del">×</button>
-            </div>
-          </div>
-        </div>`;
-      }).join('');
-    }
-  
-    // Суммы
-    const { subtotal, vat, total } = cartTotalsEUR();
-    cartTotals.innerHTML = `
-      <div><b>Сумма товаров:</b> ${fmtPrice(subtotal)}</div>
-      <div>НДС (${Math.round(VAT_RATE*100)}%): ${state.vatMode==='with' ? fmtPrice(vat) : '— (цены без НДС)'}</div>
-      <div><b>Итого к оплате:</b> ${fmtPrice(total)}</div>
-      <div class="muted">Валюта: ${symbols[state.currency] || ''}. Переключай вверху в фильтрах.</div>
-    `;
-  
-    // Кнопки +/–/×
-    cartList.querySelectorAll('.item').forEach(row=>{
-      const id = row.getAttribute('data-id');
-      row.querySelector('.btn-inc')?.addEventListener('click', ()=> setQty(id, (state.cart[id]?.qty||1) + 1));
-      row.querySelector('.btn-dec')?.addEventListener('click', ()=> setQty(id, (state.cart[id]?.qty||1) - 1));
-      row.querySelector('.btn-del')?.addEventListener('click', ()=> setQty(id, 0));
-    });
-  }
-  
-  function openCart(){
-    isCartOpen = true;
-    renderCartModal();
-    cartBackdrop?.classList.add('show');
-  }
-  
-  function closeCart(){
-    isCartOpen = false;
-    cartBackdrop?.classList.remove('show');
-  }
 }
+function getCartItems(){
+  const items = state.menu.items || [];
+  return Object.entries(state.cart).map(([id, c])=>{
+    const it = items.find(x=>x.id===id) || {};
+    return { id, qty: Number(c.qty||0), price: Number(it.price||0), it };
+  }).filter(x=>x.qty>0);
+}
+
+function setQty(id, qty){
+  if (qty <= 0) delete state.cart[id];
+  else {
+    if(!state.cart[id]) state.cart[id] = { qty:0, price:0 };
+    state.cart[id].qty = qty;
+  }
+  updateCartBar();
+  if (isCartOpen) renderCartModal();
+}
+
+function lineTotalEUR(row){ return row.qty * (row.price || 0); }
+function cartTotalsEUR(){
+  const rows = getCartItems();
+  const subtotal = rows.reduce((s,r)=> s + lineTotalEUR(r), 0);
+  const vat = state.vatMode === 'with' ? subtotal * VAT_RATE : 0;
+  const total = state.vatMode === 'with' ? (subtotal + vat) : subtotal;
+  return { subtotal, vat, total };
+}
+
+function renderCartModal(){
+  const rows = getCartItems();
+
+  if (rows.length === 0){
+    cartList.innerHTML = `<div class="item">Корзина пуста. Добавьте товары из каталога.</div>`;
+  } else {
+    cartList.innerHTML = rows.map(r=>{
+      const it = r.it || {};
+      const sz = it.size ? `${it.size.width}/${it.size.aspect} R${it.size.rim}` : '';
+      return `
+      <div class="item" data-id="${r.id}">
+        <div><b>${it.brand || ''} ${it.title || ''}</b></div>
+        <div class="muted">${sz}</div>
+        <div class="row">
+          <div class="muted">Цена: ${fmtPrice(it.price||0)} • Сумма: <b>${fmtPrice(lineTotalEUR(r))}</b></div>
+          <div class="row" style="gap:6px">
+            <button class="close btn-dec">–</button>
+            <span>${r.qty}</span>
+            <button class="close btn-inc">+</button>
+            <button class="close btn-del">×</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  const { subtotal, vat, total } = cartTotalsEUR();
+  cartTotals.innerHTML = `
+    <div><b>Сумма товаров:</b> ${fmtPrice(subtotal)}</div>
+    <div>НДС (${Math.round(VAT_RATE*100)}%): ${state.vatMode==='with' ? fmtPrice(vat) : '— (цены без НДС)'}</div>
+    <div><b>Итого к оплате:</b> ${fmtPrice(total)}</div>
+    <div class="muted">Валюта: ${symbols[state.currency] || ''}. Переключай вверху в фильтрах.</div>
+  `;
+
+  cartList.querySelectorAll('.item').forEach(row=>{
+    const id = row.getAttribute('data-id');
+    row.querySelector('.btn-inc')?.addEventListener('click', ()=> setQty(id, (state.cart[id]?.qty||1) + 1));
+    row.querySelector('.btn-dec')?.addEventListener('click', ()=> setQty(id, (state.cart[id]?.qty||1) - 1));
+    row.querySelector('.btn-del')?.addEventListener('click', ()=> setQty(id, 0));
+  });
+}
+
+function openCart(){ isCartOpen = true; renderCartModal(); cartBackdrop?.classList.add('show'); }
+function closeCart(){ isCartOpen = false; cartBackdrop?.classList.remove('show'); }
+
 async function checkout(){
   const items = Object.entries(state.cart).map(([id, c])=>{
     const it = (state.menu.items||[]).find(x=>x.id===id) || {};
@@ -304,14 +295,6 @@ document.getElementById('cart-checkout')?.addEventListener('click', ()=>{
 // Закрытие по клику на фон и по Esc
 cartBackdrop?.addEventListener('click', (e)=>{ if (e.target === cartBackdrop) closeCart(); });
 document.addEventListener('keydown', (e)=>{ if (e.key === 'Escape' && isCartOpen) closeCart(); });
-
-// Чтобы смена валюты обновляла корзину на лету
-currencyEl?.addEventListener('change', ()=>{
-  state.currency = currencyEl.value;
-  renderCatalog(state.menu.items);
-  if (isCartOpen) renderCartModal();
-});
-
 
 async function trackOrder(id){
   const { status, json } = await api(`/api/order-status?id=${encodeURIComponent(id)}`);

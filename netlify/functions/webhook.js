@@ -169,84 +169,62 @@ function botLinkStart(param = "shop") {
     ? `https://t.me/${BOT_USERNAME}?start=${encodeURIComponent(param)}`
     : (process.env.SITE_URL || "");
 }
-  exports.handler = async (event) => {
+exports.handler = async (event) => {
   try {
     if (event.httpMethod !== "POST") return { statusCode: 200, body: JSON.stringify({ ok:true }) };
+
     const update = event.body ? JSON.parse(event.body) : {};
     const BOT_TOKEN = process.env.BOT_TOKEN;
     const SITE_URL = process.env.SITE_URL || "";
+
+    async function tg(method, payload){
+      const r = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/${method}`, {
+        method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(payload)
+      });
+      return r.json();
+    }
 
     if (update.message) {
       const msg = update.message;
       const chatId = msg.chat.id;
       const text = (msg.text || "").trim();
-    
-      // /start — только на эту команду показываем приветствие и кнопки
-      if (text === "/start") {
+
+      // /start и /start <param>
+      if (text.startsWith("/start")) {
         const startText =
-  "Aikos Tires — мини-магазин в Telegram.\n" +
-  "• Каталог, фильтры, корзина\n" +
-  "• Доставка и трекинг\n" +
-  "• Отзывы на площадках\n\n" +
-  "Нужна помощь? Спросите: /ask летние 205/55 R16 michelin";
+          "Aikos Tires — мини-магазин в Telegram.\n" +
+          "• Каталог, фильтры, корзина\n" +
+          "• Доставка и трекинг\n" +
+          "• Отзывы на площадках\n\n" +
+          "Нужна помощь? /ask летние 205/55 R16 michelin";
 
-  const reply_markup = {
-  inline_keyboard: [
-    [{ text: "Открыть магазин шин", web_app: { url: SITE_URL || "https://example.com" } }],
-    [{ text: "Открыть чат с ботом", url: botLinkStart("shop") }]
-  ]
-  };
-
-  await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ chat_id: chatId, text: startText, reply_markup })
-  });
-  return { statusCode: 200, body: JSON.stringify({ ok: true }) };
+        const reply_markup = {
+          inline_keyboard: [
+            [{ text: "Открыть магазин шин", web_app: { url: SITE_URL || "https://example.com" } }],
+            [{ text: "Открыть чат с ботом", url: botLinkStart("shop") }]
+          ]
         };
-    
-        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            chat_id: chatId,
-            text: "Добро пожаловать! Откройте мини-аппу, чтобы выбрать шины и оформить заказ.\nЕсть консультант: задайте вопрос командой /ask",
-            reply_markup
-          })
-        });
-    
+
+        await tg("sendMessage", { chat_id: chatId, text: startText, reply_markup });
         return { statusCode: 200, body: JSON.stringify({ ok: true }) };
       }
-    
-      // /ask — ассистент (rule-based). 
+
+      // /ask — rule-assistant (без ИИ)
       if (text.startsWith("/ask")) {
         const q = text.replace(/^\/ask\s*/i, "").trim();
         if (!q) {
-          await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ chat_id: chatId, text: "Напишите так: /ask какие летние шины 205/55 R16?" })
-          });
+          await tg("sendMessage", { chat_id: chatId, text: "Напишите так: /ask летние шины 205/55 R16 michelin" });
         } else {
-          await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendChatAction`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ chat_id: chatId, action: "typing" })
-          });
-          // ruleAssistant — это функция из вставки, которую мы добавляли выше файла
+          await tg("sendChatAction", { chat_id: chatId, action: "typing" });
           const ans = ruleAssistant({ text: q, siteUrl: SITE_URL || "" });
-          await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ chat_id: chatId, text: ans, disable_web_page_preview: true })
-          });
+          await tg("sendMessage", { chat_id: chatId, text: ans, disable_web_page_preview: true });
         }
         return { statusCode: 200, body: JSON.stringify({ ok: true }) };
       }
-    
-      
     }
-   catch (e) {
+
+    return { statusCode: 200, body: JSON.stringify({ ok:true }) };
+  } catch (e) {
     return { statusCode: 200, body: JSON.stringify({ ok:false, error:e.message }) };
   }
 };
