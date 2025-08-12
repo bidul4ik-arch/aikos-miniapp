@@ -77,6 +77,23 @@
     </style>
   </head>
   <body>
+    <div id="cart-backdrop" class="modal-backdrop">
+      <div class="modal">
+        <div class="row">
+          <strong>Корзина</strong>
+          <button class="close" id="cart-close">Закрыть</button>
+        </div>
+    
+        <div id="cart-list" class="list" style="margin-top:8px"></div>
+        <div id="cart-totals" class="item" style="margin-top:8px"></div>
+    
+        <div class="row" style="margin-top:10px">
+          <button id="cart-clear" class="close">Очистить</button>
+          <div class="spacer"></div>
+          <button id="cart-checkout" class="btn">К оформлению</button>
+        </div>
+      </div>
+    </div>
     <div class="wrap">
       <header>
         <div class="brand">
@@ -156,7 +173,7 @@
 
       <div class="bar">
         <div class="bar-inner">
-          <div>
+          <div id="btn-cart" style="cursor:pointer"></div>
             <div><strong>Корзина</strong></div>
             <div class="muted"><span id="items-count">0</span> товар(ов)</div>
           </div>

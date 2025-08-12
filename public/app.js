@@ -34,6 +34,13 @@ const logo = document.querySelector(".logo");
 const currencyEl = document.querySelector('#currency');
 const vatEl      = document.querySelector('#vat');
 const btnCheckout = document.getElementById('btn-checkout');
+const cartBackdrop = document.getElementById('cart-backdrop');
+const cartList = document.getElementById('cart-list');
+const cartTotals = document.getElementById('cart-totals');
+const btnCart = document.getElementById('btn-cart');
+
+const VAT_RATE = 0.12; // KZ НДС 12%. Только для показа; бэкенд считает финально.
+let isCartOpen = false;
 
 if (hello) hello.textContent = tg.initDataUnsafe?.user ? `Привет, ${tg.initDataUnsafe.user.first_name}!` : "Привет!";
 if (logo) logo.addEventListener('dblclick', ()=>showDebug(window.__last_menu_response || {}));
@@ -98,7 +105,12 @@ function renderFilters(menu){
 
   if (fSeason) fSeason.innerHTML = '<option value="">Сезон</option>' + categories.map(c=>`<option value="${c.id}">${labelSeason(c.id)}</option>`).join("");
   if (fBrand)  fBrand.innerHTML  = '<option value="">Бренд</option>' + brands.map(b=>`<option value="${b}">${b}</option>`).join("");
-
+  [fWidth, fAspect, fRim].forEach(el=>{
+    if (!el) return;
+    el.addEventListener('keyup', e=>{ if (e.key === 'Enter') applyFilters(); });
+    el.addEventListener('change', applyFilters);
+    el.addEventListener('blur', applyFilters);
+  });
   [fSeason,fBrand,fWidth,fAspect,fRim,fStud,fRunflat]
     .filter(Boolean)
     .forEach(el=> el.onchange = applyFilters);
@@ -127,19 +139,35 @@ function renderCatalog(items){
 
 
 function applyFilters(){
-  const m = state.menu;
-  const items = (m.items||[]).filter(it=>{
-    if (fSeason?.value && it.season !== fSeason.value) return false;
-    if (fBrand?.value && it.brand !== fBrand.value) return false;
-    if (fWidth?.value && String(it.size?.width) !== fWidth.value) return false;
-    if (fAspect?.value && String(it.size?.aspect) !== fAspect.value) return false;
-    if (fRim?.value && String(it.size?.rim) !== fRim.value) return false;
+  // извлечём возможный комбинированный размер из поля "Ширина"
+  let w = (fWidth?.value || "").trim();
+  let a = (fAspect?.value || "").trim();
+  let r = (fRim?.value || "").trim();
+
+  const combo = (fWidth?.value || "").toLowerCase();
+  const m = combo.match(/(\d{3})\s*[\/x]\s*(\d{2})\s*(?:r\s*)?(\d{2})/i);
+  if (m) {
+    w = m[1]; a = m[2]; r = m[3];
+    if (fWidth)  fWidth.value  = w;
+    if (fAspect) fAspect.value = a;
+    if (fRim)    fRim.value    = r;
+  }
+
+  const season = fSeason?.value || "";
+  const brand  = (fBrand?.value || "").toLowerCase();
+  const items = (state.menu.items || []).filter(it=>{
+    if (season && it.season !== season) return false;
+    if (brand && (it.brand||"").toLowerCase() !== brand) return false;
+    if (w && String(it.size?.width)  !== String(w)) return false;
+    if (a && String(it.size?.aspect) !== String(a)) return false;
+    if (r && String(it.size?.rim)    !== String(r)) return false;
     if (fStud?.checked && !it.studded) return false;
     if (fRunflat?.checked && !it.runflat) return false;
     return true;
   });
   renderCatalog(items);
 }
+
 
 function addToCart(item){
   if(!state.cart[item.id]) state.cart[item.id] = { qty:0, price:item.price };
@@ -154,6 +182,88 @@ function updateCartBar(){
   if (tg.MainButton && tg.MainButton.setText) {
     if (c>0) tg.MainButton.setText(`Оформить • ${c}`).show();
     else tg.MainButton.hide();
+  }
+  function getCartItems(){
+    const items = state.menu.items || [];
+    return Object.entries(state.cart).map(([id, c])=>{
+      const it = items.find(x=>x.id===id) || {};
+      return { id, qty: Number(c.qty||0), price: Number(it.price||0), it };
+    }).filter(x=>x.qty>0);
+  }
+  
+  function setQty(id, qty){
+    if (qty <= 0) delete state.cart[id];
+    else {
+      if(!state.cart[id]) state.cart[id] = { qty:0, price:0 };
+      state.cart[id].qty = qty;
+    }
+    updateCartBar();
+    if (isCartOpen) renderCartModal();
+  }
+  
+  function lineTotalEUR(row){ return row.qty * (row.price || 0); }
+  function cartTotalsEUR(){
+    const rows = getCartItems();
+    const subtotal = rows.reduce((s,r)=> s + lineTotalEUR(r), 0);
+    const vat = state.vatMode === 'with' ? subtotal * VAT_RATE : 0;
+    const total = state.vatMode === 'with' ? (subtotal + vat) : subtotal;
+    return { subtotal, vat, total };
+  }
+  
+  function renderCartModal(){
+    const rows = getCartItems();
+  
+    // Список позиций
+    if (rows.length === 0){
+      cartList.innerHTML = `<div class="item">Корзина пуста. Добавьте товары из каталога.</div>`;
+    } else {
+      cartList.innerHTML = rows.map(r=>{
+        const it = r.it || {};
+        const sz = it.size ? `${it.size.width}/${it.size.aspect} R${it.size.rim}` : '';
+        return `
+        <div class="item" data-id="${r.id}">
+          <div><b>${it.brand || ''} ${it.title || ''}</b></div>
+          <div class="muted">${sz}</div>
+          <div class="row">
+            <div class="muted">Цена: ${fmtPrice(it.price||0)} • Сумма: <b>${fmtPrice(lineTotalEUR(r))}</b></div>
+            <div class="row" style="gap:6px">
+              <button class="close btn-dec">–</button>
+              <span>${r.qty}</span>
+              <button class="close btn-inc">+</button>
+              <button class="close btn-del">×</button>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+  
+    // Суммы
+    const { subtotal, vat, total } = cartTotalsEUR();
+    cartTotals.innerHTML = `
+      <div><b>Сумма товаров:</b> ${fmtPrice(subtotal)}</div>
+      <div>НДС (${Math.round(VAT_RATE*100)}%): ${state.vatMode==='with' ? fmtPrice(vat) : '— (цены без НДС)'}</div>
+      <div><b>Итого к оплате:</b> ${fmtPrice(total)}</div>
+      <div class="muted">Валюта: ${symbols[state.currency] || ''}. Переключай вверху в фильтрах.</div>
+    `;
+  
+    // Кнопки +/–/×
+    cartList.querySelectorAll('.item').forEach(row=>{
+      const id = row.getAttribute('data-id');
+      row.querySelector('.btn-inc')?.addEventListener('click', ()=> setQty(id, (state.cart[id]?.qty||1) + 1));
+      row.querySelector('.btn-dec')?.addEventListener('click', ()=> setQty(id, (state.cart[id]?.qty||1) - 1));
+      row.querySelector('.btn-del')?.addEventListener('click', ()=> setQty(id, 0));
+    });
+  }
+  
+  function openCart(){
+    isCartOpen = true;
+    renderCartModal();
+    cartBackdrop?.classList.add('show');
+  }
+  
+  function closeCart(){
+    isCartOpen = false;
+    cartBackdrop?.classList.remove('show');
   }
 }
 async function checkout(){
@@ -182,6 +292,26 @@ async function checkout(){
 }
 btnCheckout?.addEventListener('click', checkout);
 if (tg.MainButton?.onClick) tg.MainButton.onClick(checkout);
+btnCart?.addEventListener('click', openCart);
+document.getElementById('cart-close')?.addEventListener('click', closeCart);
+document.getElementById('cart-clear')?.addEventListener('click', ()=>{
+  state.cart = {}; updateCartBar(); renderCartModal();
+});
+document.getElementById('cart-checkout')?.addEventListener('click', ()=>{
+  closeCart(); checkout();
+});
+
+// Закрытие по клику на фон и по Esc
+cartBackdrop?.addEventListener('click', (e)=>{ if (e.target === cartBackdrop) closeCart(); });
+document.addEventListener('keydown', (e)=>{ if (e.key === 'Escape' && isCartOpen) closeCart(); });
+
+// Чтобы смена валюты обновляла корзину на лету
+currencyEl?.addEventListener('change', ()=>{
+  state.currency = currencyEl.value;
+  renderCatalog(state.menu.items);
+  if (isCartOpen) renderCartModal();
+});
+
 
 async function trackOrder(id){
   const { status, json } = await api(`/api/order-status?id=${encodeURIComponent(id)}`);
