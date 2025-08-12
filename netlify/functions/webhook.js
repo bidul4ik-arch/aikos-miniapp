@@ -48,35 +48,64 @@ function stockSum(it){
 
 function pickItems(q){
   const items = Array.isArray(MENU.items) ? MENU.items : [];
-  const res = [];
+  const out = [];
+
+  // нормализуем желаемый размер
+  const want = q.size ? {w:+q.size.w, a:+q.size.a, r:+q.size.r} : null;
+
   for (const it of items){
     let score = 0;
 
-    // размер
-    if (q.size){
-      const sz = it.size||{};
-      if (sz.width==q.size.w && sz.aspect==q.size.a && sz.rim==q.size.r) score += 3;
-      else if (sz.width==q.size.w && sz.aspect==q.size.a) score += 2;
-      else if (sz.width==q.size.w) score += 1;
+    // --- 1) Размер: точное совпадение или близкие ---
+    const sz = it.size || {};
+    if (want){
+      const dw = Math.abs((+sz.width)  - want.w);
+      const da = Math.abs((+sz.aspect) - want.a);
+      const dr = Math.abs((+sz.rim)    - want.r);
+      if (dw===0 && da===0 && dr===0) score += 6;           // идеально
+      else if (dw===0 && da===0 && dr<=1) score += 4;       // диск ±1
+      else if (dw<=10 && da<=5 && dr<=1) score += 2;        // близко по габаритам
+      else if (dw<=10 && da<=10) score += 1;                // примерно
+      else score -= 2;                                      // далековато
     }
-    // сезон
-    if (q.season){ if (it.season===q.season) score += 2; }
-    // шипы/ранфлат
-    if (q.flags.studded){ if (it.studded) score += 1; else score -= 1; }
-    if (q.flags.runflat){ if (it.runflat) score += 1; else score -= 1; }
-    // бренд
-    if (q.brands && q.brands.length){
+
+    // --- 2) Сезон/флаги ---
+    if (q.season){ if (it.season === q.season) score += 2; else score -= 1; }
+    if (q.flags?.studded){ score += it.studded ? 1 : -1; }
+    if (q.flags?.runflat){ score += it.runflat ? 1 : -1; }
+
+    // --- 3) Бренды ---
+    if (q.brands?.length){
       if (q.brands.includes(it.brand)) score += 2;
+      else score -= 1;
     }
 
-    // базовый приоритет — наличие и цена
-    score += Math.min(2, stockSum(it)>0 ? 1 : -1);
-    if (typeof it.price === "number") score += 0.001 * (10000/Math.max(1,it.price)); // лёгкий перекос к дешевле
+    // --- 4) Текстовая близость по названию (бренд/модель) ---
+    const hay = `${(it.brand||"")} ${(it.title||"")}`.toLowerCase();
+    for (const kw of (q.keywords||[])){
+      if (hay.includes(kw)) score += 0.8;
+    }
 
-    if (score > -1) res.push({ it, score });
+    // --- 5) Приоритет по наличию и цене ---
+    score += stockSum(it) > 0 ? 1 : -2;
+    if (typeof it.price === "number") score += 0.2 * (1/Math.log10(10 + it.price)); // чуть тянем дешевле
+
+    if (score > -3) out.push({ it, score });
   }
-  res.sort((a,b)=> b.score - a.score);
-  return res.slice(0,5).map(x=>x.it);
+
+  // Если совсем пусто — отдаём ТОП по бренду/сезону/наличию
+  if (!out.length){
+    for (const it of items){
+      let s = 0;
+      if (q.season && it.season === q.season) s += 1;
+      if (q.brands?.includes(it.brand)) s += 1;
+      s += stockSum(it) > 0 ? 1 : 0;
+      out.push({ it, score: s });
+    }
+  }
+
+  out.sort((a,b)=> b.score - a.score);
+  return out.slice(0,5).map(x=>x.it);
 }
 
 function findBranches(text){
@@ -92,7 +121,7 @@ function findBranches(text){
 }
 
 function formatItems(items){
-  if (!items.length) return "Ничего не нашёл по запросу — откройте мини-аппу и примените фильтры (сезон/бренд/размер).";
+  if (!items.length) return "Ничего не нашёл по запросу — откройте мини-апп и примените фильтры (сезон/бренд/размер).";
   return items.map(it=>{
     const sz = it.size ? `${it.size.width}/${it.size.aspect} R${it.size.rim}` : "";
     const tags = [it.season==='summer'?'летние': it.season==='winter'?'зимние':'всесезон', it.studded?'шипы':'', it.runflat?'runflat':''].filter(Boolean).join(", ");
@@ -105,8 +134,14 @@ function ruleAssistant({ text, siteUrl }){
   const season = parseSeason(text);
   const flags = parseFlags(text);
   const brands = findBrands(text);
+  const tokens = (text||"")
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .split(/\s+/)
+    .filter(t => t && t.length>2);
 
-  const top = pickItems({ size, season, flags, brands });
+  const top = pickItems({ size, season, flags, brands, keywords: tokens });
+
   const header = [
     size ? `Размер: ${size.w}/${size.a} R${size.r}` : null,
     season ? `Сезон: ${season}` : null,
@@ -124,12 +159,17 @@ function ruleAssistant({ text, siteUrl }){
     branchesText = "\n\nФилиалы:\n" + bb.map(b=>`• ${b.name}: ${b.address} — ${b.phone}`).join("\n");
   }
 
-  const tail = `\n\nОткрыть каталог: ${siteUrl || ""}`;
+  const tail = `\n\nОткрыть магазин в Telegram: ${botLinkStart('shop')}`;
   return (header ? `Запрос: ${header}\n` : "") + itemsText + branchesText + tail;
 }
 
-
-exports.handler = async (event) => {
+const BOT_USERNAME = process.env.BOT_USERNAME || "";
+function botLinkStart(param = "shop") {
+  return BOT_USERNAME
+    ? `https://t.me/${BOT_USERNAME}?start=${encodeURIComponent(param)}`
+    : (process.env.SITE_URL || "");
+}
+  exports.handler = async (event) => {
   try {
     if (event.httpMethod !== "POST") return { statusCode: 200, body: JSON.stringify({ ok:true }) };
     const update = event.body ? JSON.parse(event.body) : {};
@@ -143,12 +183,26 @@ exports.handler = async (event) => {
     
       // /start — только на эту команду показываем приветствие и кнопки
       if (text === "/start") {
-        const reply_markup = {
-          inline_keyboard: [
-            [{ text: "Открыть магазин шин", web_app: { url: SITE_URL || "https://example.com" } }],
-            // опционально кнопка на презентацию, если загрузил файл в /public/docs/
-            // [{ text: "Презентация (PPTX)", url: `${SITE_URL}/docs/DK_Leading_Roadmap_Pricing_KZ.pptx` }]
-          ]
+        const startText =
+  "Aikos Tires — мини-магазин в Telegram.\n" +
+  "• Каталог, фильтры, корзина\n" +
+  "• Доставка и трекинг\n" +
+  "• Отзывы на площадках\n\n" +
+  "Нужна помощь? Спросите: /ask летние 205/55 R16 michelin";
+
+  const reply_markup = {
+  inline_keyboard: [
+    [{ text: "Открыть магазин шин", web_app: { url: SITE_URL || "https://example.com" } }],
+    [{ text: "Открыть чат с ботом", url: botLinkStart("shop") }]
+  ]
+  };
+
+  await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ chat_id: chatId, text: startText, reply_markup })
+  });
+  return { statusCode: 200, body: JSON.stringify({ ok: true }) };
         };
     
         await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -192,7 +246,7 @@ exports.handler = async (event) => {
     
       
     }
-  } catch (e) {
+   catch (e) {
     return { statusCode: 200, body: JSON.stringify({ ok:false, error:e.message }) };
   }
 };
